@@ -1,0 +1,34 @@
+06 nn mm (damagevariation): the damage variation (217-255) is in the range N-M (inclusive).
+0F 0n (sleeptarget): the target goes to sleep for N+1 turns.
+18 rn (conversion, others): the N-th move is selected, where the bits set in R (big-endian) are ineligible (including Conversion itself).
+18 8n (endloop): (N < 8) Triple Kick hits N times. (N >= 8) Triple Kick hits at least (N-8) times.
+1C rn (forceswitch): a switch is forced to Pokémon N, where the 5 high bits of RN are set to indicate which values to reroll (skipping N itself & always rerolling a 6 or a 7).
+1D 0n (endloop, unused): would cause some multi-strike attack to hit N+2 times.
+1D 8n (endloop, unused): the same attack hits at least N+2 times.
+2D nn rr rr rr (metronome): Metronome selects move ID N, where move IDs R are known by the user. if needed, R should be padded with invalid move IDs.
+30 0n (disable): Disable lasts N turns.
+30 8n (disable): Disable lasts at least N turns.
+36 nn ll (constantdamage): (L < 128) Psywave deals N damage against a level L target. (L >= 128) Psywave deals at least N damage against a level (L-128) target.
+3B mt (conversion2): Conversion2 chooses type T in response to a move of type M (type indices are those used by Hidden Power).
+3B 3t (conversion2): Conversion2 chooses type T in response to a Normal- (Foresight not active) or Ground-type move.
+3B Bt (conversion2): Conversion2 chooses type T in response to a Normal-, Fighting- (Foresight active), or Electric-type move.
+3B 66 (conversion2): Conversion2 chooses Normal-type in response to a Ghost-type move.
+4C nn (protect/endure): Protect/Endure succeeds with a N/255 chance.
+51 nn (protect/endure): Protect/Endure fails with a N/255 chance of succeeding.
+58 0n (present): Present hits with power 40*(N+1).
+58 03 (present): Present heals its target.
+58 20 (present): Present does not heal its target.
+58 11 (present): Present hits with power 80 or 120.
+5D 0n (getmagnitude): Magnitude N+4.
+9D 00 (tristatuschance): Tri Attack has no special effect.
+9D 10 (tristatuschance): Tri Attack paralyses its target.
+9D 20 (tristatuschance): Tri Attack freezes its target.
+9D 30 (tristatuschance): Tri Attack burns its target.
+F0 0n: with equal speed & priority, Pokémon N goes first while holding a Quick Claw.
+F1 0n: with equal priority, Pokémon N goes first, despite being slower, while both hold a Quick Claw.
+F2 0n: with equal speed & priority, Pokémon N goes first while both hold a Quick Claw.
+F3 0n: with equal priority, Pokémon N goes first, being faster, while both hold a Quick Claw.
+FD in: the 8-(3 high bits of I) low bits of the next byte are equal to those of IN.
+FE nn: the next byte is less than N.
+FF nn: the next byte is greater than or equal to N.
+FF 00: ignore the next byte.
