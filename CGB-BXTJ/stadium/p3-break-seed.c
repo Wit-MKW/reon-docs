@@ -1,11 +1,14 @@
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#if sizeof(long) == 4
+#if ULONG_WIDTH == 32
 #define FMT_U32 "lu"
-#else
+#elif UINT_WIDTH == 32
 #define FMT_U32 "u"
+#else
+#error "Neither unsigned long nor unsigned is 32-bits!"
 #endif
 
 #define PRNG_NUM_BYTES 10
@@ -118,7 +121,7 @@ int main(int argc, char *argv[]) {
 	uint8_t arg, temp, move_type;
 
 	if (argc == 2) {
-		seed = 0;
+		seed = 0ul;
 		try_all = 1;
 	} else if (argc != 3 || sscanf(argv[2], "%" FMT_U32, &seed) != 1) {
 		fprintf(stderr, "Usage: %s <script-file> [test-seed]\n",
@@ -232,15 +235,11 @@ int main(int argc, char *argv[]) {
 				} else if (move_type == 6 && arg == 6) {
 					arg = 16;
 				}
-				ok = 0;
 				do {
 					temp = prng_byte() & 0x1F;
-					if (type_id_to_num[temp] == arg) {
-						ok = 1;
-						break;
-					}
-				} while (type_id_to_num[temp] >= 16 ||
-					!((not_very_effective[move_type] << type_id_to_num[temp]) & 0x8000));
+				} while (type_id_to_num[temp] == 99 || (!temp ? move_type != 6 :
+					!((not_very_effective[move_type] << type_id_to_num[temp]) & 0x8000)));
+				ok = (type_id_to_num[temp] == arg);
 				break;
 			case 0x4C:
 				do temp = prng_byte(); while (!temp);
