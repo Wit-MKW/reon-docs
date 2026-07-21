@@ -265,26 +265,26 @@ int main(int argc, char *argv[]) {
 				break;
 			case 0xF0:
 				prng_byte();
-				ok = (prng_byte() < 0x3C || (prng_byte() >> 7) == arg);
+				ok = (prng_byte() < 0x3C || (prng_byte() >> 7) == (arg & 1));
 				break;
 			case 0xF1:
-				if ((prng_byte() & 1) == arg) {
+				if ((prng_byte() & 1) == (arg & 1)) {
 					ok = (prng_byte() >= 0x3C && prng_byte() < 0x3C);
 				} else {
 					ok = (prng_byte() < 0x3C);
 				}
 				break;
 			case 0xF2:
-				if ((prng_byte() & 1) == arg) {
+				if ((prng_byte() & 1) == (arg & 1)) {
 					ok = (prng_byte() >= 0x3C &&
-						(prng_byte() < 0x3C || (prng_byte() >> 7) == arg));
+						(prng_byte() < 0x3C || (prng_byte() >> 7) == (arg & 1)));
 				} else {
 					ok = (prng_byte() < 0x3C ||
-						(prng_byte() >= 0x3C && (prng_byte() >> 7) == arg));
+						(prng_byte() >= 0x3C && (prng_byte() >> 7) == (arg & 1)));
 				}
 				break;
 			case 0xF3:
-				if ((prng_byte() & 1) == arg) {
+				if ((prng_byte() & 1) == (arg & 1)) {
 					ok = (prng_byte() >= 0x3C);
 					prng_byte();
 				} else {

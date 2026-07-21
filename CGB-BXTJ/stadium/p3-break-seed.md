@@ -1,10 +1,8 @@
 # `p3-break-seed`
-
 This program can be used to brute-force the value used to seed the PRNG at the
 start of a battle in Pokémon Stadium 2 (Pokémon Stadium GS in Japan).
 
 ## Script file format
-
 The exact bytes output by the PRNG cannot be directly obtained just by viewing
 the battle (or a replay thereof). Therefore, this program uses a _script file_,
 which simply defines the properties of those bytes which _can_ be observed
@@ -16,7 +14,7 @@ span three bytes, and a rarer one (used only for the move Metronome) spans five.
 
 ### Turn order
 _Throughout this section, `p` is used to indicate which player's Pokémon acts
- first; `0` for P1, or `1` for P1's opponent._
+ first; `E` for P1, or `F` for P1's opponent._
 
 At the beginning of a turn, the game must decide which Pokémon will act first.
 If one Pokémon switches out while the other attacks, or both Pokémon use moves
@@ -29,11 +27,10 @@ invoked to decide which one acts first (even if the result has no meaningful
 effect). The script record(s) for this appear as follows:
 | x             | Slower first  |     Equal speed     | Faster first  |
 |---------------|:-------------:|:-------------------:|:-------------:|
-| No Quick Claw |      N/A      |    `FF 00 Fs 80`    |    `FF 00`    |
+| No Quick Claw |      N/A      |    `FF 00 Fp 80`    |    `FF 00`    |
 | First has QC  | `FF 00 FE 3C` |       `F0 0p`       | `FF 00 FF 00` |
-| Second has QC |      N/A      | `FF 00 FF 3C Fs 80` | `FF 00 FF 3C` |
+| Second has QC |      N/A      | `FF 00 FF 3C Fp 80` | `FF 00 FF 3C` |
 | Both have QC  |    `F1 0p`    |       `F2 0p`       |    `F3 0p`    |
-`s`: `E` if P1's Pokémon acts first, `F` otherwise.
 
 ### Pre-move actions
 Certain status conditions can prevent a Pokémon ordered to move from doing so:
@@ -64,7 +61,7 @@ ratio. For moves performed by Farfetch'd or Chansey, the critical hit ratio is
   - Slash
   - Aeroblast
   - Cross Chop
-- Add 1 if the user is under the effect of Focus Energy or that of a Dire Hit.
+- Add 1 if the user is under the effect of Focus Energy or a Dire Hit.
 - Add 1 if the user is holding a Razor Claw or Scope Lens.
 - Find the resulting number in the list:
   1. `11`
@@ -88,7 +85,69 @@ but will have the same effect as specifying `D9`.
 As the final random factor in most moves, if the move's effective accuracy value
 is less than 255, a random value is compared against it to decide whether the
 move should hit. Here, a record of `FE uu` (if the move hits) or `FF uu` (if the
-move misses) should appear, where `uu` is the effective accuracy value.
+move misses) should appear, where `uu` is the effective accuracy value. For
+moves that miss anyway (Ghost vs. Normal, attacks during Dig/Fly, etc.), this is
+unobservable &amp; a record of `FF 00` should appear here, _but not if the
+effective accuracy value is 255 or higher_.
+
+For a select few moves, the accuracy check is performed before the critical hit
+check (but regardless of the result of the former, the latter &amp; the damage
+variation check are still performed). These are:
+- Doubleslap
+- Comet Punch
+- Bind
+- Fury Attack
+- Wrap
+- Thrash
+- Twineedle
+- Pin Missile
+- Petal Dance
+- Fire Spin
+- Clamp
+- Spike Cannon
+- Barrage
+- Fury Swipes
+- Triple Kick
+- Bone Rush
+- Outrage
+- Present
+- Whirlpool
+- Beat Up
+(Note that this includes every single-turn attack that strikes multiple times.)
+
+For even fewer moves, the accuracy check is performed _in between_ the critical
+hit &amp; damage variation checks. These are:
+- Thunder
+- Rage
+- Rollout
+- Fury Cutter
+
+### Special effects
+If the move has a chance of performing a special effect (stat changes, status
+effects, etc.) after dealing damage, then after the accuracy check (but even if
+it fails), a random value is compared against the effect probability to
+determine whether the effect occurs. If the move misses, this value is
+unobservable &amp; a record of `FF 00` should appear. Otherwise, a record of
+`FE qq` (if the effect occurs) or `FF qq` (otherwise) should appear, where `qq`
+is the effect probability. There is one main exception, as well as many moves
+with special effects (guaranteed or no) which themselves have random elements:
+
+#### Defense-decreasing moves
+Due to a bug, the game actually generates a second random value to compare
+against the effect probability, overriding the first, but only if the move
+hits; this renders the first value completely unobservable in either case.
+
+#### Tri Attack
+Here, the effect chance is _only_ calculated if the move hits, and is followed
+by another random value to decide which status effect to inflict, _even if the
+effect chance fails_ (in which case a record of `9D 00` should appear). If a
+status effect is inflicted, a record of:
+- `9D 10` should appear for paralysis.
+- `9D 20` should appear for a freeze.
+- `9D 30` should appear for a burn.
+
+#### ...more to follow...
+TODO
 
 ### Focus Band
 When actually dealing damage, if the target of the attack is holding a Focus
@@ -99,3 +158,39 @@ appear here. However, if the move causes its target to faint, then the Focus
 Band did not activate, and a record of `FF 1E` should appear. Conversely, if
 the move should have caused its target to faint but didn't, then the Focus Band
 did activate, and a record of `FE 1E` should appear.
+
+## Notes
+
+### Damage calculation
+_This calculation associates strictly left-to-right, and all intermediate values
+ are truncated down to the nearest integer._
+```
+((2*LVL/5+2)*POW*ATK/DEF/50*ITM*CRT+2)*TRK*WTH*STB*EFF*MOD*RNG/255*DBL
+```
+Where:
+- LVL is the attacking Pokémon's level.
+- POW is the move's effective power.
+- ATK is the attacking Pokémon's attack stat.
+- DEF is the opposing Pokémon's defense stat.
+- ITM is 1.1 if the attacking Pokémon is holding an item to enhance moves of the
+  relevant type, or 1.0 otherwise.
+- CRT is 2 for a critical hit, or 1 otherwise.
+- TRK is 3 for the third strike of Triple Kick, 2 for the second, or 1
+  otherwise.
+- WTH is 1.5 if the current weather enhances the move, 0.5 if it weakens it, or
+  1.0 otherwise.
+- STB is 1.5 if the attacking Pokémon is of the move's type, or 1.0 otherwise.
+- EFF is the type effectiveness: 0.00, 0.25, 0.50, 1.00, 2.00, or 4.00.
+- MOD is normally 1, but:
+  - For Rollout, MOD might start at 2 if preceded by Defense Curl.
+  - For Rollout &amp; Fury Cutter, MOD doubles with each consecutive use of the
+    same move.
+  - For Rage, MOD is simply equal to the Rage counter.
+- RNG is a random number in the range 217-255 (inclusive).
+- DBL is normally 1, but:
+  - For Pursuit, DBL is 2 if the opposing Pokémon switches out in the same turn
+    (in which case the pre-switch Pokémon takes the damage).
+  - For Stomp, DBL is 2 if the opposing Pokémon is minimised.
+  - For Gust &amp; Twister, DBL is 2 if the opposing Pokémon is in the air.
+  - For Earthquake &amp; Magnitude, DBL is 2 if the opposing Pokémon is
+    underground.
