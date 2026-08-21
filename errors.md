@@ -94,7 +94,8 @@ the detail code specifies the stage at which the error occurred.
 
 * In earlier versions of the library, only the first byte of each POP3 response
   is checked; any character other than `+` is treated as an error response,
-  except for `RETR` and `HEAD`, where only `-` is treated as an error response.
+  except for `RETR` and `HEAD`, where only `-` is treated as an error response
+  and any other character is treated as an OK response.
 
 ### Main code `32`
 Main code `32` indicates an HTTP error; that is, an error while uploading or
@@ -106,7 +107,7 @@ codes are recognised in some fashion:
 |--------|--------------------------------|
 | `000`  | No response code.              |
 | `200`* | OK.                            |
-| `300`  | Multiple choices.              |
+| `300`* | Multiple choices.              |
 | `301`  | Moved permanently.             |
 | `302`  | Found.                         |
 | `400`  | Bad request.                   |
@@ -123,9 +124,12 @@ codes are recognised in some fashion:
 | `503`  | Service unavailable.           |
 | `504`  | Gateway timeout.               |
 
-* This is the expected response code in most cases, and if it is received
-  unexpectedly, the error code will be `32-000`; in other words, error code
-  `32-200` cannot occur legitimately.
+* `200` is the expected response code in most cases, and if it is received
+  unexpectedly, the error code will be `32-000`; in other words, error `32-200`
+  cannot occur legitimately.
+* `300` is recognised only by Mobile Trainer, and quite possibly as a mistake;
+  it does not appear in the Mobile Trainer manual, and error `32-300` is
+  displayed as `32-XXX` in certain games (see below).
 
 ### Main code `33`
 Main code `33` indicates a mobile-center error; that is, a `Gb-Status` HTTP
@@ -163,8 +167,27 @@ following values are recognised in some fashion:
   a message for the game to display, but in practice games display a static
   message like for any other error, and the response content goes unused.
 * Every game uses the same message for errors `33-102` and `33-299`, but the
-  Mobile Trainer manual has this completely different description for the
-  former.
+  Mobile Trainer manual has this entirely unique description for the former.
+
+## Obscured error codes
+In two games (Monster Guardians and EX Monopoly), the error code is a part of
+the error message itself; therefore, unrecognised error codes are partially or
+entirely obscured:
+- Main codes `30` through `33`, inclusive, with unrecognised detail codes
+  (including `32-200`, `32-300` and `33-000`; see above) are displayed as if
+  the latter were `XXX`.
+- All other unrecognised codes (including main code `00`) are displayed as
+  `XX-XXX`.
+
+Yu-Gi-Oh Duel Monsters 5 Expert 1 contains unfinished, unused mobile
+functionality, including complete error handling that obscures unrecognised
+codes in a similar way, but with key differences:
+- Main codes `30` through `33`, inclusive, are displayed as before.
+- Main code `15` with an unrecognised detail code, as well as all unrecognised
+  main codes (again including `00`), have no message at all, and therefore no
+  error code is displayed.
+- All other recognised main codes are always displayed with a detail code of
+  `000`.
 
 ## Game-specific codes
 In three games (Pokémon Crystal, Mobile Trainer, and JGTO Kounin Golf Master
