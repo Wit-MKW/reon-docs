@@ -59,10 +59,10 @@ recognised in some fashion:
 | Detail | Meaning                               |
 |--------|---------------------------------------|
 | `000`* | No response code.                     |
-| `220`  | Service ready.                        |
+| `220`* | Service ready.                        |
 | `221`  | Service closing/Goodbye.              |
-| `250`  | Mail action completed.                |
-| `354`  | Start mail input.                     |
+| `250`* | Mail action completed.                |
+| `354`* | Start mail input.                     |
 | `421`  | Service not available.                |
 | `450`  | Mailbox unavailable (transient).      |
 | `451`  | Local error in processing.            |
@@ -80,6 +80,9 @@ recognised in some fashion:
 
 * In earlier versions of the library, an error while disconnecting from the SMTP
   server will produce an error code of `31-000`, not `30-000`.
+* `220`, `250`, and `354` are the expected response codes in various cases; in
+  fact, none of them are recognised as errors, meaning they all appear as
+  `30-XXX` in certain games (see below).
 
 ### Main code `31`
 Main code `31` indicates a POP3 error; that is, an error while receiving email;
@@ -174,8 +177,8 @@ In two games (Monster Guardians and EX Monopoly), the error code is a part of
 the error message itself; therefore, unrecognised error codes are partially or
 entirely obscured:
 - Main codes `30` through `33`, inclusive, with unrecognised detail codes
-  (including `32-200`, `32-300` and `33-000`; see above) are displayed as if
-  the latter were `XXX`.
+  (including `30-220`, `30-250`, `30-354`, `32-200`, `32-300` and `33-000`; see
+  above) are displayed as if the latter were `XXX`.
 - All other unrecognised codes (including main code `00`) are displayed as
   `XX-XXX`.
 
