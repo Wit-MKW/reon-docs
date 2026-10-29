@@ -3,7 +3,7 @@
 Various documentation &amp; code written as an aid to the REON project.
 This includes:
 - documentation of each game's server structure.
-- scripts (mostly in Python) to generate DLC files.
+- scripts (in undecided language(s)) to generate DLC files.
 
 ...and more!
 
