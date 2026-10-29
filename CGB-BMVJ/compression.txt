@@ -1,0 +1,560 @@
+0:C1C2 = u8 ?
+0:C2A2 = u8 destination[512]
+0:C4A2 = u8 minigameSort[128][2]
+0:C5C3 = u16 i (MakeAuxTree) / u8 fastBits / u8 firstBank
+0:C5C5 = u16 numSymbols / u8 *bitCounts
+0:C5C7 = u16 symbol / u16 *fastCode
+0:C5C9 = u16 nextSymbol
+0:C5CB = u8 slowBits
+0:C5CC = u8 bitCount
+0:C5CD = u16 codeEntryEnd
+0:C5CF = u16 i (FinishTree)
+0:C5D1 = u16 symbolCount
+0:C5D3 = u16 slowCodeEntry
+0:C5D5 = u8 firstWramBank
+0:C5DB = u16 slowCodeSymbol
+0:C5DD = u8 j
+
+1:D000 = u8 headerCompressed {NO=0, YES=5}
+1:D001 = u16 compressedSize
+1:D003 = u16 uncompressedSize
+1:D005 = u16 unused?
+1:D007 = u16 ?
+1:D009 = be16 crc
+1:D00B = u16 unused?
+1:D00D = u8 unused?
+1:D00E = u16 uncompressedRemain
+1:D010 = u16 repeatOffset
+1:D012 = u16 chunkRemain
+1:D014 = u16 inputBits
+1:D016 = u16 inputByte
+1:D018 = u8 mainBitCounts[262]
+1:D11E = u8 auxBitCounts[19]
+1:D131 = u16 repeatLength
+1:D133 = u16 bitsLeft
+1:D135 = u16 compressedRemain
+1:D137 = u16 auxFastCode[256]
+1:D337 = u16 slowCodeBranch1[523]
+1:D74D = u16 slowCodeBranch0[523]
+1:DB63 = u8 *source (CopyMinigame)
+1:DB65 = u8 *laterDestination
+1:DB67 = u8 compressed {NO=0, YES=5}
+1:DB68 = u8 unused
+1:DB69 = u16 blockSize (DecompressBlock)
+1:DB6B = u8 *destination (DecompressBlock)
+1:DB6D = u16 bitCountCounts[17]
+1:DB8F = u16 codeEntrySize[17]
+1:DBB1 = u16 nextCodeEntry[17]
+1:DBED = u8 sourceBank
+1:DBEE = u8 laterDestinationBank
+1:DBEF = *laterDestinationCallback(a: laterDestinationBank)
+1:DBF1 = u16 *emergencySP
+1:DBF3 = u8 totalKB
+1:DBF4 = u8 loadedKB
+1:DBF5 = u16 loadedBytesOfKB
+1:DBF7 = u8 ?
+1:DBF8 = char progressString[18+1]
+1:DF0F = u8 totalBanks
+
+2:D000 = u16 mainFastCode[2048] // 0
+3:D000 = u16 mainFastCode[2048] // 1
+
+20000 = InstallMinigame(a: u8 firstBank, de: *laterDestinationCallback(a: laterDestinationBank), hl: u8 *source) {
+	SVBK = 1
+	{D000..DC0F} = 0
+	emergencySP = sp
+	{0800} = sourceBank = firstBank
+	loadedKB = 0
+	loadedBytesOfKB = 0
+	totalKB = totalBanks << 3 | totalBanks >> 5
+	hl = zeroProgressString
+	de = progressString
+	do {
+		a = {hl++}
+		{de++} = a
+	} while (a != 0)
+	h, l = APIByteDivide(totalKB, 10)
+	progressString[15] += l
+	progressString[16] += h
+	{DBF7} = {C1C2}
+	APIFunction3B()
+	APIDrawString(progressString, 0, 0)
+	crc = 0
+	crc = (crc >> 8) ^ crcTable[crc.low ^ 0x01]
+	compressedRemain = 0
+	uncompressedRemain = 0
+	{0000} = 0xA
+	hl = ParseHeader(source)
+	{0000} = 0
+	laterDestinationBank = 4
+	CopyMinigame(hl, 0xD000)
+	SVBK = 0
+}
+
+200FB = ParseHeader(hl: u8 *source) hl: u8* {
+	c = {hl++}
+	hl += c
+	{D00D} = {hl++}
+	headerCompressed = {hl++}
+	compressedRemain = compressedSize = {hl++} | {hl++} << 8
+	uncompressedRemain = uncompressedSize = {hl++} | {hl++} << 8
+	{D00B} = {D005} = {hl++} | {hl++} << 8
+	return hl
+}
+
+20133 = CopyMinigame(hl: u8 *source, de: u8 *laterDestination) a: u8 {
+	crc = 0
+	compressed = headerCompressed
+	if (compressed != NO) {
+		if (compressed != YES) return 1
+		InitDecompression()
+	}
+	while (uncompressedRemain != 0) {
+		if (uncompressedRemain > 512) {
+			bc = 512
+		} else {
+			bc = uncompressedRemain
+		}
+		if (compressed != NO) {
+			DecompressBlock(bc, destination)
+		} else {
+			CopyUncompressedBlock(bc)
+		}
+		UpdateCRC(bc)
+		uncompressedRemain -= bc
+		if (uncompressedRemain <= 0) {
+			if (laterDestination = 0xD000) break
+			laterDestinationCallback(laterDestinationBank)
+			break
+		}
+	}
+}
+
+201D9 = UpdateCRC(bc: u16 blockSize) {
+	UpdateProgress(blockSize)
+	hl = destination
+	repeat (blockSize or 65536) {
+		crc = (crc >> 8) ^ crcTable[crc.low ^ {hl++}]
+	}
+}
+
+20244 = InitDecompression() {
+	InitInputBlock()
+	repeatLength = 0
+}
+
+2024F = GetBits(a: u8 bits) bc: u16 {
+	bc = inputBits >> (16 - bits)
+	DropBits(bits)
+	return bc
+}
+
+20273 = FinishTree(a: u8 fastBits, bc: u16 symbolCount, de: u8 *bitCounts, hl: u16 *fastCode) {
+	bitCountCounts[0..16] = 0
+	repeat (symbolCount) {
+		bitCountCounts[{de++}].low++
+	}
+	hl = &nextCodeEntry[1]
+	de = &bitCountCounts[1]
+	nextCodeEntry[1] = 0
+	for (i: 1..16) {
+		bc = {hl++} + ({de++} << (16 - i))
+		{hl} = bc
+	}
+	slowBits = 16 - fastBits
+	hl = &nextCodeEntry[1]
+	de = &codeEntrySize[1]
+	for (i: 1..fastBits) {
+		{hl++} >>= slowBits
+		{de++} = 1 << (fastBits - i)
+	}
+	for (i: (fastBits+1)..16) {
+		{de++} = 1 << (16 - i)
+	}
+	bc = nextCodeEntry[1 + fastBits] >> slowBits
+	if (bc != 0) {
+		de = 1 << fastBits
+		hl = &fastCode[bc]
+		if (hl >= 0xE000) {
+			hl -= 0x1000
+			SVBK = 3
+		} else {
+			SVBK = firstWramBank
+		}
+		while (bc != de) {
+			{hl++} = 0
+			bc++
+			if (0xE000 <= hl <= 0xE0FF) {
+				hl -= 0x1000
+				SVBK = 3
+			}
+		}
+		SVBK = 1
+	}
+	nextSymbol = symbolCount
+	bc = 1 << (15 - fastBits)
+	for (i: 0..(symbolCount-1)) {
+		hl = &bitCounts[i]
+		if ({hl} != 0) {
+			bitCount = {hl}
+			codeEntryEnd = nextCodeEntry[bitCount] + codeEntrySize[bitCount]
+			if (bitCount <= fastBits) {
+				de = nextCodeEntry[bitCount]
+				hl = &fastCode[de]
+				if (hl >= 0xE000) {
+					hl -= 0x1000
+					SVBK = 3
+				} else {
+					SVBK = firstWramBank
+				}
+				while (de != codeEntryEnd) {
+					{hl++} = i
+					de++
+					if (0xE000 <= hl <= 0xE0FF) {
+						hl -= 0x1000
+						SVBK = 3
+					}
+				}
+				SVBK = 1
+			} else {
+				slowCodeEntry = nextCodeEntry[bitCount]
+				hl = &fastCode[slowCodeEntry >> slowBits]
+				if (hl >= 0xE000) {
+					hl -= 0x1000
+					SVBK = 3
+				} else {
+					SVBK = firstWramBank
+				}
+				for (j: (bitCount-fastBits)..0) {
+					slowCodeSymbol = {hl}
+					if (slowCodeSymbol = 0) {
+						{hl} = slowCodeSymbol = nextSymbol
+						SVBK = 1
+						slowCodeBranch1[nextSymbol] = 0
+						slowCodeBranch0[nextSymbol] = 0
+						nextSymbol++
+					}
+					SVBK = 1
+					if ((slowCodeEntry & bc) != 0) {
+						hl = slowCodeBranch1[slowCodeSymbol]
+					} else {
+						hl = slowCodeBranch0[slowCodeSymbol]
+					}
+					slowCodeEntry <<= 1
+				}
+				{hl++} = i
+				SVBK = 1
+			}
+			nextCodeEntry[bitCount] = codeEntryEnd
+		}
+	}
+}
+
+205E8 = MakeAuxTree(a: u8 maxSymbols, b: u8 bits, c: u8 skipSymbol) {
+	bc = GetBits(bits)
+	if (bc = 0) {
+		// this code path does not work in any intended or useful way.
+		bc = GetBits(bits)
+		auxFastCode[0..((bc >> 8 or 256) - 1)] = (u16)e // the MSBs of inputByte, in their position as the LSBs of inputBits.
+		auxBitCounts[0..(maxSymbols-1)] = 0
+	} else {
+		i = 0
+		while (i < bc) {
+			bc' = inputBits >> 13
+			if (bc' < 256) d = bc
+			if (bc' = 7) {
+				bc' = 0x1000
+				while ((inputBits & bc') != 0) {
+					bc' >>= 1
+					d++
+				}
+			}
+			DropBits(max(d, 6) - 3)
+			hl = &auxBitCounts[i++]
+			{hl} = d
+			if (i % 256 = skipSymbol) {
+				bc' = GetBits(2)
+				hl++
+				while (--bc' >= 0) {
+					{hl++} = 0
+					i++
+				}
+			}
+		}
+		hl = &auxBitCounts[i]
+		while (i < (u16)maxSymbols) {
+			{hl++} = 0
+			i++
+		}
+		firstWramBank = 1
+		FinishTree(8, (u16)maxSymbols, auxBitCounts, auxFastCode)
+	}
+}
+
+206FD = MakeMainTree() {
+	bc = GetBits(9)
+	if (bc = 0) {
+		bc = GetBits(9)
+		for (SVBK: 2..3) {
+			mainFastCode[0..2047] = bc
+		}
+		SVBK = 1
+		mainBitCounts[0..261] = 0
+	} else {
+		symbol = 0
+		while (symbol < bc) {
+			de = auxFastCode[inputBits >> 8]
+			bc' = 0x80
+			while (de >= 19) {
+				if ((inputBits & bc') != 0) {
+					de = slowCodeBranch1[de]
+				} else {
+					de = slowCodeBranch0[de]
+				}
+				bc' >>= 1
+			}
+			DropBits(auxBitCounts[de])
+			if (de < 3) {
+				switch (de) {
+				case 0:
+					bc' = 1
+					break
+				case 1:
+					bc' = GetBits(4) + 3
+					break
+				case 2:
+					bc' = GetBits(9) + 20
+				}
+				hl = &mainBitCounts[symbol]
+				symbol += bc
+				if (bc != 0) {
+					hl[0..(bc-1)] = 0
+				}
+			} else {
+				hl = &mainBitCounts[symbol]
+				symbol++
+				{hl} = (byte)de - 2
+			}
+		}
+		de = symbol
+		hl = &mainBitCounts[de]
+		while (de < 262) {
+			{hl++} = 0
+			de++
+		}
+		firstWramBank = 2
+		FinishTree(12, 262, mainBitCounts, mainFastCode)
+	}
+}
+
+20869 = GetMainSymbol() hl: u16 {
+	if (chunkRemain = 0) {
+		chunkRemain = GetBits(16)
+		MakeAuxTree(19, 5, 3)
+		MakeMainTree()
+		MakeAuxTree(10, 4, -1)
+	}
+	chunkRemain--
+	bc = (inputBits >> 4) * 2
+	if (bc < 4096) {
+		SVBK = 2
+	} else {
+		bc -= 4096
+		SVBK = 3
+	}
+	de = mainFastCode[bc/2]
+	SVBK = 1
+	bc = 8
+	while (de >= 262) {
+		if ((inputBits & bc) != 0) {
+			de = slowCodeBranch1[de]
+		} else {
+			de = slowCodeBranch0[de]
+		}
+		bc >>= 1
+	}
+	DropBits(mainBitCounts[de])
+	return de
+}
+
+20922 = GetAuxSymbol10() hl: u16 {
+	de = auxFastCode[inputBits >> 8]
+	bc = 0x80
+	while (de >= 10) {
+		if ((inputBits & bc) != 0) {
+			de = slowCodeBranch1[de]
+		} else {
+			de = slowCodeBranch0[de]
+		}
+		bc >>= 1
+	}
+	DropBits(auxBitCounts[de])
+	if (de != 0) {
+		hl = (1 << (de - 1)) + GetBits(de - 1)
+	} else {
+		hl = 0
+	}
+	return hl
+}
+
+2098B = DecompressBlock(bc: u16 blockSize, de: u8 *destination) {
+	hl = de + repeatOffset
+	while (--repeatLength >= 0) {
+		{de++} = {hl++}
+		repeatOffset = (repeatOffset + 1) & 0x1FF
+		if (repeatOffset = 0) hl = destination
+		if (--bc = 0) return
+	}
+	until-return {
+		hl = GetMainSymbol()
+		if (hl < 256) {
+			{de++} = (byte)hl
+			if (--bc = 0) return
+		} else {
+			repeatLength = hl - 253
+			hl = GetAuxSymbol10() + 1
+			repeatOffset = (blockSize - bc - hl) & 0x1FF
+			hl = destination + repeatOffset
+			while (--repeatLength >= 0) {
+				{de++} = {hl++}
+				repeatOffset = (repeatOffset + 1) & 0x1FF
+				if (repeatOffset = 0) hl = destination
+				if (--bc = 0) return
+			}
+		}
+	}
+}
+
+20A83 = InitInputBlock() {
+	InitInputBits()
+	blockRemain = 0
+}
+
+20A8E = InitInputBits() {
+	inputBits = 0
+	inputByte = 0
+	bitsLeft = 0
+	DropBits(16)
+}
+
+20AA7 = DropBits(a: bits) {
+	b = bits
+	inputBits <<= b
+	while (b > bitsLeft.low) {
+		b -= bitsLeft.low
+		inputBits |= (inputByte << b)
+		if ({header1} != 0) {
+			{header1}--
+			inputByte = (u16)NextByte()
+		} else {
+			inputByte = 0
+		}
+		bitsLeft = 8
+	}
+	bitsLeft.low -= b
+	inputBits |= (inputByte >> bitsLeft)
+}
+
+20B57 = CopyUncompressedBlock(bc: blockSize) {
+	{0000} = 0xA
+	blockSize += 256
+	de = source
+	hl = destination
+	repeat (blockSize or 65536) {
+		{hl++} = {de++}
+		if (de = 0xC000) {
+			de = 0xA000
+			a = sourceBank
+			{0400} = ++a
+			{0800} = ++a
+			sourceBank = a
+		}
+	}
+	source = de
+	{0000} = 0
+}
+
+20B9D = UpdateProgress(bc: blockSize) {
+	loadedBytesOfKB += blockSize
+	de = laterDestination
+	SVBK = laterDestinationBank
+	hl = destination
+	repeat (blockSize) {
+		{de++} = {hl++}
+		if (0xE000 <= de <= 0xE0FF) {
+			SVBK = 1
+			laterDestinationCallback(laterDestinationBank)
+			SVBK = laterDestinationBank
+			de = 0xD000
+		}
+	}
+	SVBK = 1
+	laterDestination = de
+	b = 0
+	while (loadedBytesOfKB >= 1024) {
+		loadedBytesOfKB -= 1024
+		loadedKB++
+		b++
+	}
+	if (b != 0) {
+		h, l = APIByteDivide(loadedKB, 10)
+		progressString[12] = '0' + l
+		progressString[13] = '0' + h
+		{C1C2} = {DBF7} + 12
+		APIDrawString(&progressString[12], 0, 12)
+	}
+}
+
+20C33 = NextByte() a: u8 {
+	{0000} = 0xA
+	hl = source
+	b = {hl++}
+	if (hl = 0xC000) {
+		hl = 0xA000
+		a = sourceBank
+		{0400} = ++a
+		{0800} = ++a
+		sourceBank = a
+	}
+	source = hl
+	{0000} = 0
+	return b
+}
+
+20C6A = be16 crcTable[256] {
+	0x0000, 0xC1C0, 0x81C1, 0x4001, 0x01C3, 0xC003, 0x8002, 0x41C2,
+	0x01C6, 0xC006, 0x8007, 0x41C7, 0x0005, 0xC1C5, 0x81C4, 0x4004,
+	0x01CC, 0xC00C, 0x800D, 0x41CD, 0x000F, 0xC1CF, 0x81CE, 0x400E,
+	0x000A, 0xC1CA, 0x81CB, 0x400B, 0x01C9, 0xC009, 0x8008, 0x41C8,
+	0x01D8, 0xC018, 0x8019, 0x41D9, 0x001B, 0xC1DB, 0x81DA, 0x401A,
+	0x001E, 0xC1DE, 0x81DF, 0x401F, 0x01DD, 0xC01D, 0x801C, 0x41DC,
+	0x0014, 0xC1D4, 0x81D5, 0x4015, 0x01D7, 0xC017, 0x8016, 0x41D6,
+	0x01D2, 0xC012, 0x8013, 0x41D3, 0x0011, 0xC1D1, 0x81D0, 0x4010,
+	0x01F0, 0xC030, 0x8031, 0x41F1, 0x0033, 0xC1F3, 0x81F2, 0x4032,
+	0x0036, 0xC1F6, 0x81F7, 0x4037, 0x01F5, 0xC035, 0x8034, 0x41F4,
+	0x003C, 0xC1FC, 0x81FD, 0x403D, 0x01FF, 0xC03F, 0x803E, 0x41FE,
+	0x01FA, 0xC03A, 0x803B, 0x41FB, 0x0039, 0xC1F9, 0x81F8, 0x4038,
+	0x0028, 0xC1E8, 0x81E9, 0x4029, 0x01EB, 0xC02B, 0x802A, 0x41EA,
+	0x01EE, 0xC02E, 0x802F, 0x41EF, 0x002D, 0xC1ED, 0x81EC, 0x402C,
+	0x01E4, 0xC024, 0x8025, 0x41E5, 0x0027, 0xC1E7, 0x81E6, 0x4026,
+	0x0022, 0xC1E2, 0x81E3, 0x4023, 0x01E1, 0xC021, 0x8020, 0x41E0,
+	0x01A0, 0xC060, 0x8061, 0x41A1, 0x0063, 0xC1A3, 0x81A2, 0x4062,
+	0x0066, 0xC1A6, 0x81A7, 0x4067, 0x01A5, 0xC065, 0x8064, 0x41A4,
+	0x006C, 0xC1AC, 0x81AD, 0x406D, 0x01AF, 0xC06F, 0x806E, 0x41AE,
+	0x01AA, 0xC06A, 0x806B, 0x41AB, 0x0069, 0xC1A9, 0x81A8, 0x4068,
+	0x0078, 0xC1B8, 0x81B9, 0x4079, 0x01BB, 0xC07B, 0x807A, 0x41BA,
+	0x01BE, 0xC07E, 0x807F, 0x41BF, 0x007D, 0xC1BD, 0x81BC, 0x407C,
+	0x01B4, 0xC074, 0x8075, 0x41B5, 0x0077, 0xC1B7, 0x81B6, 0x4076,
+	0x0072, 0xC1B2, 0x81B3, 0x4073, 0x01B1, 0xC071, 0x8070, 0x41B0,
+	0x0050, 0xC190, 0x8191, 0x4051, 0x0193, 0xC053, 0x8052, 0x4192,
+	0x0196, 0xC056, 0x8057, 0x4197, 0x0055, 0xC195, 0x8194, 0x4054,
+	0x019C, 0xC05C, 0x805D, 0x419D, 0x005F, 0xC19F, 0x819E, 0x405E,
+	0x005A, 0xC19A, 0x819B, 0x405B, 0x0199, 0xC059, 0x8058, 0x4198,
+	0x0188, 0xC048, 0x8049, 0x4189, 0x004B, 0xC18B, 0x818A, 0x404A,
+	0x004E, 0xC18E, 0x818F, 0x404F, 0x018D, 0xC04D, 0x804C, 0x418C,
+	0x0044, 0xC184, 0x8185, 0x4045, 0x0187, 0xC047, 0x8046, 0x4186,
+	0x0182, 0xC042, 0x8043, 0x4183, 0x0041, 0xC181, 0x8180, 0x4040
+}
+
+02E6A = char romCheckString[18+1] "ＲＯＭチェックちゅう‥　　　　　　　"
+02E7D = char zeroProgressString[18+1] "ついかとうろくちゅう‥　００／００　"
