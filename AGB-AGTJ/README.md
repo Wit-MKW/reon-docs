@@ -95,9 +95,9 @@ files in this directory for info on the content of each):
   - 3: TI Circuit Aida
   - 4: Central Park Mine Circuit
   - 5: Suzuka Circuit
-  - 6: _Custom track slot 1_
-  - 7: _Custom track slot 2_
-  - 8: _Custom track slot 3_
+  - 6: _Custom track slot 1._
+  - 7: _Custom track slot 2._
+  - 8: _Custom track slot 3._
 - Only track IDs 0-6 appear in filenames and bitfields.
 - Adding 9 to any track ID indicates that a particular run was performed in
   mirror mode. Mirror-mode track IDs do not appear in filenames or bitfields.
