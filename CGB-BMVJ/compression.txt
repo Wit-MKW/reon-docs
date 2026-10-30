@@ -77,7 +77,7 @@
 	progressString[15] += l
 	progressString[16] += h
 	{DBF7} = {C1C2}
-	APIFunction3B()
+	APITextClear()
 	APIDrawString(progressString, 0, 0)
 	crc = 0
 	crc = (crc >> 8) ^ crcTable[crc.low ^ 0x01]
@@ -261,7 +261,7 @@
 		i = 0
 		while (i < bc) {
 			bc' = inputBits >> 13
-			if (bc' < 256) d = bc
+			if (bc' < 256) d = (byte)bc'
 			if (bc' = 7) {
 				bc' = 0x1000
 				while ((inputBits & bc') != 0) {
