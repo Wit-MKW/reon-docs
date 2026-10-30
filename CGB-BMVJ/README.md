@@ -33,20 +33,25 @@ This game's strings are byte-oriented, and its character set is as follows:
   - `0F` should always be followed by `00` or `04`.
 - `10`-`2F` are as ASCII `20`-`3F`, respectively.
 - `30`-`3F` are as follows:
+
 | `0x` | +0  | +1  | +2  | +3  |
 |------|-----|-----|-----|-----|
 | `30` | `[` | `¥` | `]` | `×` |
 | `34` | `÷` | `{` | `|` | `}` |
 | `38` | `~` | `@` | `｢` | `｣` |
 | `3C` | `—` | `~` | `､` | `｡` |
+
 - Latin letters are as in ASCII (`41`-`5A` and `61`-`7A`).
 - `5B`-`5F` and `7B`-`7F` are as follows:
+
 | `0x` | +B  | +C  | +D  | +E  | +F  |
 |------|-----|-----|-----|-----|-----|
 | `50` | `✜` | `‥` | `^` | `_` | `’` |
 | `70` | `Ⓐ` | `Ⓑ` | ` ` | ` ` | ` ` |
+
 - `80`-`FF` are as follows.
   - `FE` and `FF` precede the character they modify (e.g. `FE 98` is `で`).
+
 | `0x` | +0  | +1  | +2  | +3  | +4  | +5  | +6  | +7  |
 |------|-----|-----|-----|-----|-----|-----|-----|-----|
 | `80` | `ぁ` | `あ` | `ぃ` | `い` | `ぅ` | `う` | `ぇ` | `え` |
