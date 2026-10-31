@@ -15,6 +15,7 @@ class BitArray {
 		return this;
 	}
 	push(x, b) {
+		x %= (1 << b);
 		if (this.shift < 8) {
 			if ((this.shift += b) <= 8) {
 				this.array[this.array.length - 1] |= x << (8 - this.shift);
@@ -25,13 +26,13 @@ class BitArray {
 			this.shift = 8;
 		}
 		while (b > 8)
-			this.array.push((x >> (b -= 8)) & 0xFF);
+			this.array.push((x >> (b -= 8)) % 256);
 		if (b > 0)
-			this.array.push((x << (8 - (this.shift = b))) & 0xFF);
+			this.array.push((x << (8 - (this.shift = b))) % 256);
 		return this;
 	}
 	read(o, b) {
-		let tmp = this.array[o >> 3] & ~(-256 >> (o % 8));
+		let tmp = this.array[o >> 3] % (256 >> (o % 8));
 		if ((o >> 3) == ((o + b) >> 3))
 			return tmp >> (8 - (o + b) % 8);
 		for (let i = (o >> 3) + 1; i < ((o + b) >> 3); i++)
@@ -73,7 +74,7 @@ function calc_bits(values) {
 		for (let j = 0; j < values.length; j++)
 			if (values[j] != 0) pkgs.push({value: values[j], coins: [j]});
 		pkgs.sort((a, b) => a.value - b.value);
-		max_pkgs /= 2;
+		max_pkgs >>= 1;
 	}
 	// calculate bit counts.
 	let bits = new Array(values.length).fill(0);
@@ -234,7 +235,7 @@ function bmvj_compress(src, ba=null, prev=[]) {
 			const bits = 31 - Math.clz32(sym[1]);
 			ba.push(...offs_codes[bits + 1]);
 			if (bits > 0)
-				ba.push(sym[1] & ~(1 << bits), bits);
+				ba.push(sym[1], bits);
 		}
 	}
 	return ba;
@@ -378,14 +379,24 @@ async function main() {
 	if (argv.length != 4 && argv.length != 5) {
 		console.log(
 			"Usage: bmvj-compress.js <input> <output> [<block size>|decomp]");
-		console.log("<block size> defaults to 65535.");
+		console.log("By default, the data is compressed in a single block.");
 		return;
 	}
 	const blob = await openAsBlob(argv[2]);
 	let data;
 	if (argv[4] === "decomp") {
+		if (blob.size > 8192)
+			console.log(
+				"WARN: The input data is too large for Net de Get to download."
+			);
 		data = bmvj_decompress(await blob.bytes());
 	} else {
+		if (blob.size > 65535) {
+			console.log(
+				"WARN: The input data is too large for Net de Get to decompress."
+			);
+			blob = blob.slice(0, 65535);
+		}
 		const size = (argv.length == 5) ? parseInt(argv[4]) : 65535;
 		let ba = null;
 		let prev = [];
@@ -402,6 +413,10 @@ async function main() {
 			ba.array.length % 256, ba.array.length >> 8,
 			blob.size % 256, blob.size >> 8, 0, 0, ...ba.array
 		]);
+		if (data.length > 8192)
+			console.log(
+				"WARN: The output data is too large for Net de Get to download."
+			);
 	}
 	writeFile(argv[3], data, (err) => {if (err) console.log(err);});
 }
