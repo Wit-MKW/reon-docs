@@ -87,6 +87,38 @@ files in this directory for info on the content of each):
 - `gtent06.cgb`
 - `100.gtexcrs`
 
+## Common structure formats
+### Timestamp
+| Offset(s) | Description         |
+|-----------|---------------------|
+| 0x0-0x1   | Little-endian year. |
+| 0x2       | Month (1-12).       |
+| 0x3       | Date (1-31).        |
+| 0x4       | Hour (0-23).        |
+| 0x5       | Minute (0-59).      |
+| 0x6       | Second (0-59).      |
+| 0x7       | Zero (0).           |
+
+### Ranking entry
+| Offset(s) | Description                                             |
+|-----------|---------------------------------------------------------|
+| 0x00      | Track ID.                                               |
+| 0x01      | Weather (0=sun, 1=rain).                                |
+| 0x02      | Vehicle ID.                                             |
+| 0x03      | Transmission mode (0=auto, 1=manual).                   |
+| 0x04      | Gear ratio (0=low, 1=medium, 2=high).                   |
+| 0x05      | Steering (0=slow, 1=medium, 2=quick).                   |
+| 0x06      | Brake (0=soft, 1=medium, 2=hard).                       |
+| 0x07      | Tire (0=soft, 1=medium, 2=hard).                        |
+| 0x08      | Aerodynamics (0=low, 1=medium, 2=high).                 |
+| 0x09      | Custom track no. (0 for standard & user-custom tracks). |
+| 0x0A-0x0B | Zero (0).                                               |
+| 0x0C-0x0D | Little-endian handicap weight in kilograms.             |
+| 0x0E-0x23 | Player's name.                                          |
+| 0x24-0x27 | Little-endian race time in units of 1/100 second.       |
+| 0x28-0x2F | GMT upload timestamp.                                   |
+| 0x30-0x33 | Little-endian ghost ID (0 for non-uploaded ghosts).     |
+
 ## Notes
 - Track IDs (not to be confused with track numbers) are as follows:
   - 0: Twin Ring Motegi
@@ -101,3 +133,37 @@ files in this directory for info on the content of each):
 - Only track IDs 0-6 appear in filenames and bitfields.
 - Adding 9 to any track ID indicates that a particular run was performed in
   mirror mode. Mirror-mode track IDs do not appear in filenames or bitfields.
+
+### Character set
+This game's strings are based on two-byte, little-endian codepoints. Its
+character set is as follows:
+- `0000`-`005D` are as JIS `20`-`7D`, respectively.
+- `005E`-`007F` are as follows:
+
+| `0x` | +0  | +1  | +2  | +3  | +4  | +5  | +6  | +7  |
+|------|-----|-----|-----|-----|-----|-----|-----|-----|
+| `58` | `x` | `y` | `z` | `{` | \|  | `}` | `~` | `〒` |
+| `60` | `✩` | `★` | `○` | `●` | `⌾` | `◇` | `◆` | `□` |
+| `68` | `■` | `△` | `▲` | `▽` | `▼` | `♥︎` | `♂` | `♀` |
+| `70` | `\` | `≠` | `<` | `>` | `±` | `×` | `÷` | `‖` |
+| `78` | `‘` | `’` | `“` | `”` | `⦗` | `⦘` | `《` | `》` |
+
+- `0081`-`00BF` are as JIS `A1-DF`, respectively, although the in-game keyboard
+  enters `00F5` and `0100` instead of `0085` and `0090`, respectively.
+- `00C0`-`00EF` are as follows:
+
+| `0x` | +0  | +1  | +2  | +3  | +4  | +5  | +6  | +7  |
+|------|-----|-----|-----|-----|-----|-----|-----|-----|
+| `C0` | `‥` | `…` | `ヰ` | `ヴ` | `ヱ` |     | `ガ` | `ギ` |
+| `C8` | `グ` | `ゲ` | `ゴ` | `ザ` | `ジ` | `ズ` | `ゼ` | `ゾ` |
+| `D0` | `ダ` | `ヂ` | `ヅ` | `デ` | `ド` | `パ` | `ピ` | `プ` |
+| `D8` | `ペ` | `ポ` | `バ` | `ビ` | `ブ` | `ベ` | `ボ` | `♪` |
+| `E0` | `∞` | `【` | `】` | `℃` | `¢` | `£` | `§` | `═` |
+| `E8` | `〜` | `™` | `©` | `®` | `→` | `←` | `↑` | `↓` |
+
+- `00F0`-`014E` are the hiragana equivalents of `0080`-`00DE`, respectively,
+  with the following exceptions:
+  - The in-game keyboard enters `0081` and `0084` instead of `00F1` and `00F4`,
+    respectively.
+  - `00F2` and `00F3` are `『` and `』`, respectively.
+  - `0133` and `0135` are undefined.
