@@ -443,8 +443,8 @@
 	while (b > bitsLeft.low) {
 		b -= bitsLeft.low
 		inputBits |= (inputByte << b)
-		if ({header1} != 0) {
-			{header1}--
+		if (compressedRemain != 0) {
+			compressedRemain--
 			inputByte = (u16)NextByte()
 		} else {
 			inputByte = 0
