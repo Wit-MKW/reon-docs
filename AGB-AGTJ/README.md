@@ -139,7 +139,10 @@ Both instances of `****` are the same filename:
 This game's strings are based on two-byte, little-endian codepoints. Its
 character set is as follows:
 - `0000`-`005D` are as JIS `20`-`7D`, respectively.
-- `0058`-`007F` are as follows:
+- `0058`-`007F` are as follows.
+  - `0072` and `0073` are vertically compressed as compared to `001C` and
+    `001E`, respectively. On the in-game keyboard, the former pair appears next
+    to `001D` while the latter pair appears next to `003D`.
 
 | `0x` | +0  | +1  | +2  | +3  | +4  | +5  | +6  | +7  |
 |------|-----|-----|-----|-----|-----|-----|-----|-----|
@@ -149,9 +152,6 @@ character set is as follows:
 | `70` | `\` | `≠` | `<` | `>` | `±` | `×` | `÷` | `‖` |
 | `78` | `‘` | `’` | `“` | `”` | `⦗` | `⦘` | `《` | `》` |
 
-  - `0072` and `0073` are vertically compressed as compared to `001C` and
-    `001E`, respectively. On the in-game keyboard, the former pair appears next
-    to `001D` while the latter pair appears next to `003D`.
 - `0081`-`00BF` are as JIS `A1`-`DF`, respectively, although the in-game
   keyboard enters `00F5` and `0100` instead of `0085` and `0090`, respectively.
 - `00C0`-`00EF` are as follows:
