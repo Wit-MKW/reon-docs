@@ -149,8 +149,11 @@ character set is as follows:
 | `70` | `\` | `≠` | `<` | `>` | `±` | `×` | `÷` | `‖` |
 | `78` | `‘` | `’` | `“` | `”` | `⦗` | `⦘` | `《` | `》` |
 
-- `0081`-`00BF` are as JIS `A1-DF`, respectively, although the in-game keyboard
-  enters `00F5` and `0100` instead of `0085` and `0090`, respectively.
+  - `0072` and `0073` are vertically compressed as compared to `001C` and
+    `001E`, respectively. On the in-game keyboard, the former pair appears next
+    to `001D` while the latter pair appears next to `003D`.
+- `0081`-`00BF` are as JIS `A1`-`DF`, respectively, although the in-game
+  keyboard enters `00F5` and `0100` instead of `0085` and `0090`, respectively.
 - `00C0`-`00EF` are as follows:
 
 | `0x` | +0  | +1  | +2  | +3  | +4  | +5  | +6  | +7  |
@@ -168,4 +171,5 @@ character set is as follows:
     respectively.
   - `00F2` and `00F3` are `『` and `』`, respectively.
   - `0133` and `0135` are undefined.
+- `014F` is `※`.
 - `FFFF` terminates a string.
