@@ -22,9 +22,9 @@ this directory for info on each):
 - `http://gameboy.datacenter.ne.jp/cgb/download?name=/28/AGB-AGTJ/gtgst05.cgb`
 - `http://gameboy.datacenter.ne.jp/cgb/download?name=/28/AGB-AGTJ/gtgst06.cgb`
 
-Custom tracks are downloaded from the URL
-`http://gameboy.datacenter.ne.jp/cgb/download?name=/28/AGB-AGTJ/gtexcrsNNN.cgb`,
-where `NNN` is an integer from `000`-`255` (see `gtexcrsNNN.cgb.md` in this
+Custom tracks are downloaded from the <!-- 81-character (sorry!) --> URL
+`http://gameboy.datacenter.ne.jp/cgb/download?name=/28/AGB-AGTJ/100.gtexcrsNNN.cgb`,
+where `NNN` is an integer `000`-`255` (see `100.gtexcrsNNN.cgb.md` in this
 directory for more info):
 
 The following filenames are appended to a prefix specified in `gtconfig.cgb` in
@@ -168,3 +168,4 @@ character set is as follows:
     respectively.
   - `00F2` and `00F3` are `『` and `』`, respectively.
   - `0133` and `0135` are undefined.
+- `FFFF` terminates a string.
