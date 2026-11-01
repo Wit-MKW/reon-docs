@@ -70,14 +70,15 @@ Context-Transfer-Encoding: 7bit
 もう一度、エントリーしてください。
 -----------------------
 ```
-The second part has the following headers (including the `octec` typo):
+The second part has the following headers (including the `octec` typo), and
+the same content as the corresponding download file, but with a 32-byte header
+consisting entirely of the player's NUL-terminated email address.
 ```
 Content-Type: application/octec-stream; name="****"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="****"
 ```
-Both instances of `****` are the same filename (see the corresponding `.md`
-files in this directory for info on the content of each):
+Both instances of `****` are the same filename:
 - `gtent00.cgb`
 - `gtent01.cgb`
 - `gtent02.cgb`
@@ -100,24 +101,24 @@ files in this directory for info on the content of each):
 | 0x7       | Zero (0).           |
 
 ### Ranking entry
-| Offset(s) | Description                                             |
-|-----------|---------------------------------------------------------|
-| 0x00      | Track ID.                                               |
-| 0x01      | Weather (0=sun, 1=rain).                                |
-| 0x02      | Vehicle ID.                                             |
-| 0x03      | Transmission mode (0=auto, 1=manual).                   |
-| 0x04      | Gear ratio (0=low, 1=medium, 2=high).                   |
-| 0x05      | Steering (0=slow, 1=medium, 2=quick).                   |
-| 0x06      | Brake (0=soft, 1=medium, 2=hard).                       |
-| 0x07      | Tire (0=soft, 1=medium, 2=hard).                        |
-| 0x08      | Aerodynamics (0=low, 1=medium, 2=high).                 |
-| 0x09      | Custom track no. (0 for standard & user-custom tracks). |
-| 0x0A-0x0B | Zero (0).                                               |
-| 0x0C-0x0D | Little-endian handicap weight in kilograms.             |
-| 0x0E-0x23 | Player's name.                                          |
-| 0x24-0x27 | Little-endian race time in units of 1/100 second.       |
-| 0x28-0x2F | GMT upload timestamp.                                   |
-| 0x30-0x33 | Little-endian ghost ID (0 for non-uploaded ghosts).     |
+| Offset(s) | Description                                               |
+|-----------|-----------------------------------------------------------|
+| 0x00      | Track ID.                                                 |
+| 0x01      | Weather (0=sun, 1=rain).                                  |
+| 0x02      | Vehicle ID.                                               |
+| 0x03      | Transmission mode (0=auto, 1=manual).                     |
+| 0x04      | Gear ratio (0=low, 1=medium, 2=high).                     |
+| 0x05      | Steering (0=slow, 1=medium, 2=quick).                     |
+| 0x06      | Brake (0=soft, 1=medium, 2=hard).                         |
+| 0x07      | Tire (0=soft, 1=medium, 2=hard).                          |
+| 0x08      | Aerodynamics (0=low, 1=medium, 2=high).                   |
+| 0x09      | Custom track no. (0 for standard and user-custom tracks). |
+| 0x0A-0x0B | Zero (0).                                                 |
+| 0x0C-0x0D | Little-endian handicap weight in kilograms.               |
+| 0x0E-0x23 | Player's name.                                            |
+| 0x24-0x27 | Little-endian race time in units of 1/100 second.         |
+| 0x28-0x2F | GMT upload timestamp.                                     |
+| 0x30-0x33 | Little-endian ghost ID (0 for non-uploaded ghosts).       |
 
 ## Notes
 - Track IDs (not to be confused with track numbers) are as follows:
