@@ -42,13 +42,8 @@ This game's strings are byte-oriented, and its character set is as follows:
 | `3C` | `—` | `~` | `､` | `｡` |
 
 - Latin letters are as in ASCII (`41`-`5A` and `61`-`7A`).
-- `5B`-`5F` and `7B`-`7F` are as follows:
-
-| `0x` | +B  | +C  | +D  | +E  | +F  |
-|------|-----|-----|-----|-----|-----|
-| `50` | `✜` | `‥` | `^` | `_` | `’` |
-| `70` | `Ⓐ` | `Ⓑ` | ` ` | ` ` | ` ` |
-
+- `5B`-`5F` are `✜`, `‥`, `^`, `_`, and `’`, respectively.
+- `70` and `71` are `Ⓐ` and `Ⓑ`, respectively.
 - `80`-`FF` are as follows.
   - `FE` and `FF` precede the character they modify (e.g. `FE 98` is `で`).
 
@@ -61,7 +56,7 @@ This game's strings are byte-oriented, and its character set is as follows:
 | `A0` | `ひ` | `ふ` | `へ` | `ほ` | `ま` | `み` | `む` | `め` |
 | `A8` | `も` | `ゃ` | `や` | `ゅ` | `ゆ` | `ょ` | `よ` | `ら` |
 | `B0` | `り` | `る` | `れ` | `ろ` | `ゎ` | `わ` | `を` | `ん` |
-| `B8` | `→` | `←` | `↑` | `↓` | `•` | ` ` | ` ` | ` ` |
+| `B8` | `→` | `←` | `↑` | `↓` | `•` |     |     |     |
 | `C0` | `ァ` | `ア` | `ィ` | `イ` | `ゥ` | `ウ` | `ェ` | `エ` |
 | `C8` | `ォ` | `オ` | `カ` | `キ` | `ク` | `ケ` | `コ` | `サ` |
 | `D0` | `シ` | `ス` | `セ` | `ン` | `タ` | `チ` | `ッ` | `ツ` |

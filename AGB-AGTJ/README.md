@@ -139,7 +139,7 @@ Both instances of `****` are the same filename:
 This game's strings are based on two-byte, little-endian codepoints. Its
 character set is as follows:
 - `0000`-`005D` are as JIS `20`-`7D`, respectively.
-- `005E`-`007F` are as follows:
+- `0058`-`007F` are as follows:
 
 | `0x` | +0  | +1  | +2  | +3  | +4  | +5  | +6  | +7  |
 |------|-----|-----|-----|-----|-----|-----|-----|-----|
@@ -162,7 +162,7 @@ character set is as follows:
 | `E0` | `∞` | `【` | `】` | `℃` | `¢` | `£` | `§` | `═` |
 | `E8` | `〜` | `™` | `©` | `®` | `→` | `←` | `↑` | `↓` |
 
-- `00F0`-`014E` are the hiragana equivalents of `0080`-`00DE`, respectively,
+- `00F1`-`014E` are the hiragana equivalents of `0081`-`00DE`, respectively,
   with the following exceptions:
   - The in-game keyboard enters `0081` and `0084` instead of `00F1` and `00F4`,
     respectively.
