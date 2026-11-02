@@ -64,7 +64,7 @@ This game's strings are byte-oriented, and its character set is as follows:
 | `E0` | `ヒ` | `フ` | `ヘ` | `ホ` | `マ` | `ミ` | `ム` | `メ` |
 | `E8` | `モ` | `ャ` | `ヤ` | `ュ` | `ユ` | `ョ` | `ヨ` | `ラ` |
 | `F0` | `リ` | `ル` | `レ` | `ロ` | `ヮ` | `ワ` | `ヲ` | `ン` |
-| `F8` | `☎` | `♪` | `☺` | `☺` | `★` | `❤` | `゛` | `゜` |
+| `F8` | `☎` | `♪` | `☺` | `🫠` | `★` | `❤` | `゛` | `゜` |
 
 ### Title
 This game has a rather bizarre title. In the logo, "Net de Get" (which roughly
