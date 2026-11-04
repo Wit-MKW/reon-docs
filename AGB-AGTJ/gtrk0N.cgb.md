@@ -6,7 +6,7 @@ times on track ID `N`, and also contains a timestamp to indicate when the
 rankings were last updated.
 
 ## File format
-| Offset(s)   | Description                             |
+| Offsets     | Description                             |
 |-------------|-----------------------------------------|
 | 0x000-0x007 | Local-zone update timestamp.            |
 | 0x008-0x03B | Ranking entry #1.                       |

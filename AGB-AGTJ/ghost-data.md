@@ -6,7 +6,7 @@ recording the settings used for that run, as well as the inputs entered during
 it, frame for frame.
 
 ## File format
-| Offset(s)     | Description                               |
+| Offsets       | Description                               |
 |---------------|-------------------------------------------|
 | 0x0000-0x0033 | Ranking entry.                            |
 | 0x0034-0x0035 | Little-endian length specifier.           |

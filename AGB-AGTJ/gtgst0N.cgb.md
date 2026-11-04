@@ -6,7 +6,7 @@ It also contains a timestamp to indicate when the ghost listings were last
 updated.
 
 ## File format
-| Offset(s)   | Description                             |
+| Offsets     | Description                             |
 |-------------|-----------------------------------------|
 | 0x000-0x007 | Local-zone update timestamp.            |
 | 0x008-0x05B | Ghost entry #1.                         |
@@ -17,7 +17,7 @@ updated.
 | 0x9E0-0x9E3 | Little-endian sum of bytes 0x000-0x9DF. |
 
 ## Ghost entry
-| Offset(s) | Description              |
+| Offsets   | Description              |
 |-----------|--------------------------|
 | 0x00-0x33 | Ranking entry.           |
 | 0x34-0x53 | NUL-terminated filename. |
