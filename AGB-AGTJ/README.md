@@ -72,7 +72,7 @@ Context-Transfer-Encoding: 7bit
 ```
 The second part has the following headers (including the `octec` typo), and
 the same content as the corresponding download file, but with a 32-byte header
-consisting entirely of the player's NUL-terminated email address.
+consisting entirely of the player's email address, NUL-padded.
 ```
 Content-Type: application/octec-stream; name="****"
 Content-Transfer-Encoding: base64

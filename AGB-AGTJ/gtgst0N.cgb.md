@@ -17,7 +17,7 @@ updated.
 | 0x9E0-0x9E3 | Little-endian sum of bytes 0x000-0x9DF. |
 
 ## Ghost entry
-| Offsets   | Description              |
-|-----------|--------------------------|
-| 0x00-0x33 | Ranking entry.           |
-| 0x34-0x53 | NUL-terminated filename. |
+| Offsets   | Description          |
+|-----------|----------------------|
+| 0x00-0x33 | Ranking entry.       |
+| 0x34-0x53 | NUL-padded filename. |
