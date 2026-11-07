@@ -28,19 +28,38 @@ for info on each):
 - `0.dlghostdr.cgb`
 - `0.dlghostst.cgb`
 
+Of the above, only `total.cgb` and `query.cgb` are used for Mobile GP.
+
 The upload URL for a given track or Mobile GP is formed by concatenating the
 base URL `http://gameboy.datacenter.ne.jp/cgb/upload?name=/01/AGB-AMKJ`, the
 line from `index.cgb` corresponding to said track or Mobile GP (see
 `index.cgb.md` for info), and the filename `0.entry.cgb`. See `0.entry.cgb.md`
 for info.
 
-Finally, Mobile GP "ticket" files may have any filename appended to
+Finally, Mobile GP "ticket" files may have any filename, which is appended to
 `http://gameboy.datacenter.ne.jp/cgb/download?name=/01/AGB-AMKJ/`, although the
 filename must be 20 bytes or shorter, and should begin with an ASCII number and
 period (that is, require authentication) so that the service charge (if any)
 appears correctly in-game. They have no content.
 
-## Character set
+## Timestamp
+| Offset(s) | Description      |
+|-----------|------------------|
+| 0x0-0x1   | Big-endian year. |
+| 0x2       | Month (1-12).    |
+| 0x3       | Day (1-31).      |
+| 0x4       | Hour (0-23).     |
+| 0x5       | Minute (0-59).   |
+
+## Notes
+### Kart IDs
+When first connecting to the server, the game generates a "Kart ID" based on
+the player's identity and the current date/time. The Kart ID is a 16-byte value
+that is often transmitted over the network, either raw or as ASCII hex. Note
+also that a Kart ID of all zeroes will never be generated and cannot be used to
+download a ghost.
+
+### Character set
 This game uses single-byte codepoints in order to display characters, and uses
 these same codepoints in most of the strings it transmits and receives over the
 network. However, the strings for the messages in the mobile menu are stored,
