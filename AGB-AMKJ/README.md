@@ -24,7 +24,6 @@ for info on each):
 - `0.dlghost.cgb`
 - `0.dlghost2.cgb`
 - `0.dlghost3.cgb`
-- `0.dlghostid.cgb`
 - `0.dlghostdr.cgb`
 - `0.dlghostst.cgb`
 
