@@ -14,7 +14,7 @@ function kart_id_encode(data) {
 		minute = parseInt(data.date.slice(20, 22));
 	}
 	const email = data.email.slice(0, 8);
-	const email_svr = data.email_svr ?? data.email.slice(11, 13);
+	const email_svr = (data.email_svr ?? data.email.slice(11, 13)) + ".";
 
 	const pack = Uint16Array.from([
 		month << 12 | day << 7 | hour << 2 | minute >> 4,
@@ -78,7 +78,7 @@ function kart_id_decode(myid, email_grp=null, before=null, nick_end=null) {
 	data.email += chr((pack[4] >> 4) & 0x7F);
 
 	data.email_svr = chr((pack[4] << 3 | pack[5] >> 13) & 0x7F);
-	if (((pack[5] >> 6) & 0x7F) != 0)
+	if (((pack[5] >> 6) & 0x7F) != 0x2E)
 		data.email_svr += chr((pack[5] >> 6) & 0x7F);
 
 	data.nick = Uint8Array.from([
