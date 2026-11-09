@@ -1,4 +1,9 @@
 # `p3-break-seed`
+_Note: this documentation will probably never be finished; instead, use
+`p3-break-seed-compile.js` in this directory to convert a more human-readable
+battle log into the format used by `p3-break-seed.c` (see
+`p3-break-seed-compile.md` in this directory for info)._
+
 This program can be used to brute-force the value used to seed the PRNG at the
 start of a battle in Pokémon Stadium 2 (Pokémon Stadium GS in Japan).
 
