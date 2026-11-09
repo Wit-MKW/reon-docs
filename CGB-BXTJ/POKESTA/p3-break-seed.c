@@ -1,17 +1,20 @@
 #include <limits.h>
+#include <omp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#if ULONG_WIDTH == 32
-#define FMT_U32 "lu"
-#elif UINT_WIDTH == 32
-#define FMT_U32 "u"
-#else
-#error "Neither unsigned long nor unsigned is 32-bits!"
+#if CHAR_BIT < 8
+#error CHAR_BIT must be at least eight!
 #endif
 
 #define PRNG_NUM_BYTES 10
+
+typedef struct {
+	uint32_t last;
+	int offset;
+	uint8_t bytes[PRNG_NUM_BYTES];
+} prng_state_t;
 
 static const uint32_t prng_to_lcg[255] = {
 	0x00000000, 0x01010102, 0x02020204, 0x03030304, 0x04040408, 0x05050508, 0x06060608, 0x07070708,
@@ -87,48 +90,44 @@ static const uint8_t type_id_to_num[32] = {
 	99, 99
 };
 
-static uint32_t prng_last;
-static int prng_offset;
-static uint8_t prng_bytes[PRNG_NUM_BYTES];
-
-static void prng_reset(uint32_t last) {
-	prng_last = last;
-	prng_offset = -PRNG_NUM_BYTES;
+static void prng_reset(prng_state_t *prng, uint32_t last) {
+	prng->last = last;
+	prng->offset = -PRNG_NUM_BYTES;
 }
 
-static uint8_t prng_byte(void) {
+static uint8_t prng_byte(prng_state_t *prng) {
 	uint8_t ret;
-
-	if (prng_offset < 0) {
-		prng_last = prng_last * 0x19660Dul + 0x3C6EF35Ful;
-		ret = prng_last >> 24;
-		return ret - (ret == 0xFFu || prng_last < prng_to_lcg[ret]);
+	if (prng->offset < 0) {
+		prng->last = prng->last * 0x19660Dul + 0x3C6EF35Ful;
+		ret = prng->last >> 24;
+		ret -= (ret == 0xFFu || prng->last < prng_to_lcg[ret]);
+		return (prng->bytes[PRNG_NUM_BYTES + prng->offset++] = ret);
 	} else {
-		if (prng_offset == PRNG_NUM_BYTES)
-			prng_offset = 0;
-		ret = prng_bytes[prng_offset] * 5u + 1u;
-		return (prng_bytes[prng_offset++] = ret);
+		if (prng->offset == PRNG_NUM_BYTES)
+			prng->offset = 0;
+		ret = prng->bytes[prng->offset] * 5u + 1u;
+		return (prng->bytes[prng->offset++] = ret);
 	}
 }
 
 int main(int argc, char *argv[]) {
-	uint32_t seed;
-	char try_all;
+	unsigned long long min_seed, max_seed;
 	FILE *fp;
 	long size, offset;
-	uint8_t *data;
+	unsigned char *data;
+	unsigned long long seed;
 	char ok;
-	uint8_t arg, temp, move_type;
+	unsigned char arg, temp, move_type;
 
 	if (argc == 2) {
-		seed = 0ul;
-		try_all = 1;
-	} else if (argc != 3 || sscanf(argv[2], "%" FMT_U32, &seed) != 1) {
+		min_seed = 0ull;
+		max_seed = 0xFFFFFFFFull;
+	} else if (argc == 3 && sscanf(argv[2], "%llu", &min_seed) == 1) {
+		max_seed = min_seed;
+	} else {
 		fprintf(stderr, "Usage: %s <script-file> [test-seed]\n",
 			(argc && **argv) ? *argv : "p3-break-seed");
 		return 1;
-	} else {
-		try_all = 0;
 	}
 
 	if ((fp = fopen(argv[1], "rb")) == NULL) {
@@ -162,33 +161,35 @@ int main(int argc, char *argv[]) {
 
 	fclose(fp);
 
-	do /* while (try_all && seed) */ {
-		prng_reset(seed << 16 | seed >> 16);
+	#pragma omp parallel for
+	for (seed = min_seed; seed <= max_seed; ++seed) {
+		prng_state_t prng;
+		prng_reset(&prng, seed << 16 | seed >> 16);
 		for (offset = 0; offset < size; offset += 2) {
 			arg = data[offset + 1];
 			switch (data[offset]) {
 			case 0x06:
-				do temp = prng_byte(); while (temp < 217);
+				do temp = prng_byte(&prng); while (temp < 217);
 				ok = (temp >= arg && temp <= data[++offset + 1]);
 				break;
 			case 0x0F:
 				do {
-					temp = prng_byte() & 7;
+					temp = prng_byte(&prng) & 7;
 					if (temp == 1)
-						temp = prng_byte() & 7;
+						temp = prng_byte(&prng) & 7;
 				} while (!temp || temp > 3);
 				ok = (temp == (arg & 3) || ((arg & 0x80) && temp > (arg & 3)));
 				break;
 			case 0x18:
 				do {
-					temp = prng_byte() & 3;
+					temp = prng_byte(&prng) & 3;
 				} while ((arg << temp) & 0x80);
 				ok = (temp == (arg & 3) || ((arg & 8) && temp > (arg & 3)));
 				break;
 			case 0x1C:
 				ok = 0;
 				do {
-					do temp = prng_byte() & 7; while (temp >= 6);
+					do temp = prng_byte(&prng) & 7; while (temp >= 6);
 					if (temp == (arg & 7)) {
 						ok = 1;
 						break;
@@ -196,14 +197,14 @@ int main(int argc, char *argv[]) {
 				} while ((arg << (temp - (temp > (arg & 7)))) & 0x80);
 				break;
 			case 0x1D:
-				temp = prng_byte() & 3;
+				temp = prng_byte(&prng) & 3;
 				if (temp > 1)
-					temp = prng_byte() & 3;
+					temp = prng_byte(&prng) & 3;
 				ok = (temp == (arg & 3) || ((arg & 0x80) && temp > (arg & 3)));
 				break;
 			case 0x2D:
 				do {
-					temp = prng_byte();
+					temp = prng_byte(&prng);
 				} while (!temp || strchr(metronome_forbidden, temp) != NULL
 					|| temp == data[offset+2] || temp == data[offset+3]
 					|| temp == data[offset+4]);
@@ -211,12 +212,12 @@ int main(int argc, char *argv[]) {
 				offset += 3;
 				break;
 			case 0x30:
-				do temp = prng_byte() & 7; while (!temp);
+				do temp = prng_byte(&prng) & 7; while (!temp);
 				ok = (temp == (arg & 7) || ((arg & 0x80) && temp > (arg & 7)));
 				break;
 			case 0x36:
 				do {
-					temp = prng_byte();
+					temp = prng_byte(&prng);
 				} while (!temp || temp > (arg & 0x7F) * 3/2);
 				ok = (temp == data[offset+2] || ((arg & 0x80) && temp > data[offset+2]));
 				++offset;
@@ -236,76 +237,77 @@ int main(int argc, char *argv[]) {
 					arg = 16;
 				}
 				do {
-					temp = prng_byte() & 0x1F;
+					temp = prng_byte(&prng) & 0x1F;
 				} while (type_id_to_num[temp] == 99 || (!temp ? move_type != 6 :
 					!((not_very_effective[move_type] << type_id_to_num[temp]) & 0x8000)));
 				ok = (type_id_to_num[temp] == arg);
 				break;
 			case 0x4C:
-				do temp = prng_byte(); while (!temp);
+				do temp = prng_byte(&prng); while (!temp);
 				ok = (temp <= arg);
 				break;
 			case 0x51:
-				do temp = prng_byte(); while (!temp);
+				do temp = prng_byte(&prng); while (!temp);
 				ok = (temp > arg);
 				break;
 			case 0x58:
-				temp = prng_byte();
+				temp = prng_byte(&prng);
 				ok = (temp <= present_power[(arg & 3) + (arg >> 4)] &&
 					(!arg || temp > present_power[arg - 1]));
 				break;
 			case 0x5D:
-				temp = prng_byte();
+				temp = prng_byte(&prng);
 				ok = (arg < sizeof(magnitude_power) && temp <= magnitude_power[arg] &&
 					(!arg || temp > magnitude_power[arg - 1]));
 				break;
 			case 0x9D:
-				do temp = prng_byte() & 0x30; while (!temp);
+				do temp = prng_byte(&prng) & 0x30; while (!temp);
 				ok = (!arg || temp == arg);
 				break;
 			case 0xF0:
-				prng_byte();
-				ok = (prng_byte() < 0x3C || (prng_byte() >> 7) == (arg & 1));
+				prng_byte(&prng);
+				ok = (prng_byte(&prng) < 0x3C || (prng_byte(&prng) >> 7) == (arg & 1));
 				break;
 			case 0xF1:
-				if ((prng_byte() & 1) == (arg & 1)) {
-					ok = (prng_byte() >= 0x3C && prng_byte() < 0x3C);
+				if ((prng_byte(&prng) & 1) == (arg & 1)) {
+					ok = (prng_byte(&prng) >= 0x3C && prng_byte(&prng) < 0x3C);
 				} else {
-					ok = (prng_byte() < 0x3C);
+					ok = (prng_byte(&prng) < 0x3C);
 				}
 				break;
 			case 0xF2:
-				if ((prng_byte() & 1) == (arg & 1)) {
-					ok = (prng_byte() >= 0x3C &&
-						(prng_byte() < 0x3C || (prng_byte() >> 7) == (arg & 1)));
+				if ((prng_byte(&prng) & 1) == (arg & 1)) {
+					ok = (prng_byte(&prng) >= 0x3C &&
+						(prng_byte(&prng) < 0x3C || (prng_byte(&prng) >> 7) == (arg & 1)));
 				} else {
-					ok = (prng_byte() < 0x3C ||
-						(prng_byte() >= 0x3C && (prng_byte() >> 7) == (arg & 1)));
+					ok = (prng_byte(&prng) < 0x3C ||
+						(prng_byte(&prng) >= 0x3C && (prng_byte(&prng) >> 7) == (arg & 1)));
 				}
 				break;
 			case 0xF3:
-				if ((prng_byte() & 1) == (arg & 1)) {
-					ok = (prng_byte() >= 0x3C);
-					prng_byte();
+				if ((prng_byte(&prng) & 1) == (arg & 1)) {
+					ok = (prng_byte(&prng) >= 0x3C);
+					prng_byte(&prng);
 				} else {
-					ok = (prng_byte() < 0x3C || prng_byte() >= 0x3C);
+					ok = (prng_byte(&prng) < 0x3C || prng_byte(&prng) >= 0x3C);
 				}
 				break;
 			case 0xFD:
-				ok = !((prng_byte() ^ arg) & (0xFF >> (arg >> 5)));
+				ok = !((prng_byte(&prng) ^ arg) & (0xFF >> (arg >> 5)));
 				break;
 			case 0xFE:
-				ok = (prng_byte() < arg);
+				ok = (prng_byte(&prng) < arg);
 				break;
 			case 0xFF:
-				ok = (prng_byte() >= arg);
+				ok = (prng_byte(&prng) >= arg);
 				break;
 			default:
 				ok = 0;
 			}
 			if (!ok) break;
 		}
-		if (ok) printf("%10" FMT_U32 "\n", seed);
-		++seed;
-	} while (try_all && seed);
+		if (ok)
+			#pragma omp critical
+			printf("%10llu\n", seed);
+	}
 }
