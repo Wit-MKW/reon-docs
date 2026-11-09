@@ -50,8 +50,7 @@ appears correctly in-game. They have no content.
 | 0x4       | Hour (0-23).     |
 | 0x5       | Minute (0-59).   |
 
-## Common enums
-### Driver ID
+## Driver IDs
 0. Mario
 1. Luigi
 2. Peach
