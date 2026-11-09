@@ -35,24 +35,13 @@ The race rules are eight ASCII hex digits as follows:
 | 2      | Non-zero enables starting with triple mushrooms.      |
 | 3      | Non-zero causes item boxes to produce mushrooms only. |
 | 4      | Zero disables computer-controlled opponents.          |
-| 5      | Forced character (0=none, 1-8=see below).             |
+| 5      | Forced driver (0=none, else=driver ID plus one).      |
 | 6      | Starting coin count divided by 5.                     |
 | 7      | Non-zero sets the race length to 5 laps instead of 3. |
-
-### Character IDs
-1. Mario
-2. Luigi
-3. Peach
-4. Toad
-5. Yoshi
-6. DK
-7. Wario
-8. Bowser
 
 ## Notes
 - All dates are in `YYYYMMDD` format.
 - Start dates are beginning-of-day, and end dates are end-of-day, in UTC+9.
-- Track numbers run `00`-`19`, in Grand Prix order.
 - The description is limited to 32 lines (four pages), and each line is limited
   to 22 fullwidth characters.
 - The file may end after the last used description line.
@@ -62,7 +51,7 @@ The race rules are eight ASCII hex digits as follows:
   digits. This allows for decimal numbers to escape their intended ranges.
 - When parsing a digit, any byte other than `1`-`9`, `A`-`F`, or `a`-`f` is
   parsed as zero.
-- In the race rules, any character ID above `8` corresponds to Mario.
+- In the race rules, any invalid driver ID corresponds to Mario.
 - The file is not technically parsed linewise at all. Instead:
   - Line 1 may be broken by any combination of `0A` and/or `0D`.
   - Lines 2-13, each being a fixed length, may be broken by any two bytes at

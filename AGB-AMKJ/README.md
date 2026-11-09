@@ -50,6 +50,17 @@ appears correctly in-game. They have no content.
 | 0x4       | Hour (0-23).     |
 | 0x5       | Minute (0-59).   |
 
+## Common enums
+### Driver ID
+0. Mario
+1. Luigi
+2. Peach
+3. Toad
+4. Yoshi
+5. DK
+6. Wario
+7. Bowser
+
 ## Notes
 ### Kart IDs
 When first connecting to the server, the game generates a "Kart ID" based on
