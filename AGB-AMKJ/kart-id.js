@@ -101,12 +101,12 @@ function kart_id_decode(myid, email_grp=null, before=null, nick_end=null) {
 
 	if (before !== null) {
 		let date = new Date(Date.UTC(
-			before.getFullYear(), data.month - 1, data.day,
+			before.getUTCFullYear(), data.month - 1, data.day,
 			data.hour, data.minute
 		));
 		if (date.getTime() >= before.getTime())
-			date.setFullYear(date.getFullYear() - 1);
-		data.year = date.getFullYear();
+			date.setUTCFullYear(date.getUTCFullYear() - 1);
+		data.year = date.getUTCFullYear();
 		data.date = date.toUTCString();
 	}
 
