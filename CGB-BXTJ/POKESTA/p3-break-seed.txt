@@ -17,8 +17,8 @@
 51 nn (protect/endure): Protect/Endure fails with a N/255 chance of succeeding.
 58 0n (present): Present hits with power 40*(N+1).
 58 03 (present): Present heals its target.
-58 20 (present): Present does not heal its target.
 58 11 (present): Present hits with power 80 or 120.
+58 20 (present): Present does not heal its target.
 5D 0n (getmagnitude): Magnitude N+4.
 9D 00 (tristatuschance): Tri Attack has no special effect.
 9D 10 (tristatuschance): Tri Attack paralyses its target.
@@ -28,6 +28,8 @@ F0 0n: with equal speed & priority, Pokémon N goes first while holding a Quick 
 F1 0n: with equal priority, Pokémon N goes first, despite being slower, while both hold a Quick Claw.
 F2 0n: with equal speed & priority, Pokémon N goes first while both hold a Quick Claw.
 F3 0n: with equal priority, Pokémon N goes first, being faster, while both hold a Quick Claw.
+F8 mm (Focus Band, since v1.0): if the last damage variation was less than or equal to M, ignore the next byte.
+F8 mm (Focus Band, since v1.0): if the last damage variation was greater than M, the next byte is less than 30.
 FD in: the 8-(3 high bits of I) low bits of the next byte are equal to those of IN.
 FE nn: the next byte is less than N.
 FF nn: the next byte is greater than or equal to N.

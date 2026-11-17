@@ -1,3 +1,20 @@
+/* Pokémon Stadium GS Seed Breaker v1.0
+Copyright (C) 2026  Liz "OtherLiz" S.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 #include <limits.h>
 #include <omp.h>
 #include <stdio.h>
@@ -7,6 +24,10 @@
 #if CHAR_BIT < 8
 #error CHAR_BIT must be at least eight!
 #endif
+
+#define PROGRAM "Pokémon Stadium GS Seed Breaker"
+#define VERSION "v1.0"
+#define AUTHOR "Liz \"OtherLiz\" S."
 
 #define PRNG_NUM_BYTES 10
 
@@ -117,7 +138,10 @@ int main(int argc, char *argv[]) {
 	unsigned char *data;
 	unsigned long long seed;
 	char ok;
-	unsigned char arg, temp, move_type;
+	unsigned char arg, temp, dmgvar, move_type;
+
+	printf("%s %s\n", PROGRAM, VERSION);
+	printf("by %s\n", AUTHOR);
 
 	if (argc == 2) {
 		min_seed = 0ull;
@@ -135,13 +159,7 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	if (fseek(fp, 0l, SEEK_END)) {
-		fclose(fp);
-		fputs("Couldn't get input file size!\n", stderr);
-		return 1;
-	}
-
-	if ((size = ftell(fp)) == -1l) {
+	if (fseek(fp, 0l, SEEK_END) || (size = ftell(fp)) == -1l) {
 		fclose(fp);
 		fputs("Couldn't get input file size!\n", stderr);
 		return 1;
@@ -169,8 +187,8 @@ int main(int argc, char *argv[]) {
 			arg = data[offset + 1];
 			switch (data[offset]) {
 			case 0x06:
-				do temp = prng_byte(&prng); while (temp < 217);
-				ok = (temp >= arg && temp <= data[++offset + 1]);
+				do dmgvar = prng_byte(&prng); while (dmgvar < 217);
+				ok = (dmgvar >= arg && dmgvar <= data[++offset + 1]);
 				break;
 			case 0x0F:
 				do {
@@ -291,6 +309,13 @@ int main(int argc, char *argv[]) {
 				} else {
 					ok = (prng_byte(&prng) < 0x3C || prng_byte(&prng) >= 0x3C);
 				}
+				break;
+			case 0xF8:
+				ok = 1;
+				if (dmgvar <= arg)
+					prng_byte(&prng);
+				else if (prng_byte(&prng) >= 30)
+					ok = 0;
 				break;
 			case 0xFD:
 				ok = !((prng_byte(&prng) ^ arg) & (0xFF >> (arg >> 5)));
